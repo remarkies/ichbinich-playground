@@ -1,0 +1,28 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.hud {
+}
+
+#x-Axis {
+    top: 70px;
+    position: fixed;
+    width: 80vw;
+    height: 2px;
+    background: black;
+    left: 50%;
+    margin-left: -40vw;
+}
+#x-Axis div {
+    position: fixed;
+}
+
+#image-list {
+    position: relative;
+}
+
+#image-list img {
+    position: absolute;
+}
