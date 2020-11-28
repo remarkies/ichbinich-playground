@@ -22,7 +22,7 @@ function loadImages() {
     let images = initImages();
     images.forEach(img => {
         let elem = document.createElement("img");
-        elem.setAttribute("src", "../public/images/" + img.path);
+        elem.setAttribute("src", "./images/" + img.path);
         elem.setAttribute("height", sizeMultiplier * img.height);
         elem.setAttribute("width", sizeMultiplier * img.width);
         elem.setAttribute("id", img.path);
