@@ -1,11 +1,12 @@
 let ImageList = document.getElementById('image-list');
 let XAxis = document.getElementById('x-Axis');
+let YAxis = document.getElementById('y-Axis');
 window.addEventListener("scroll", scroll);
-ImageList.addEventListener('dblclick', zoomIn);
+ImageList.addEventListener('dblclick', doubleClick);
 let distanceAround = vh(20);
 let sizeMultiplier = 2;
 let zoomSpeed = 1.2;
-let maxZoomIn = 0.1;
+let maxZoomIn = 0.2;
 let currentScrollX = 0;
 let currentScrollY = 0;
 
@@ -33,28 +34,10 @@ function loadImages() {
 
 }
 function initImages() {
-    let images = [];
-
-    images.push(createImageObject('IMG_2786.jpg', 30, 24, 2008))
-    images.push(createImageObject('IMG_2787.jpg', 40, 120, 2010))
-    images.push(createImageObject('IMG_2788.jpg', 30, 100, 2009))
-    images.push(createImageObject('IMG_2789.jpg', 30, 30, 2014))
-    images.push(createImageObject('IMG_2790.jpg', 30, 30, 2016))
-    images.push(createImageObject('IMG_2791.jpg', 80, 120, 2018))
-    images.push(createImageObject('IMG_2792.jpg', 70, 50, 2005))
-    images.push(createImageObject('IMG_2793.jpg', 60, 50, 2016))
-
+    let images = getImages();
     images = applyAxisToImages(images, 0);
     images = applyAxisToImages(images, 1);
     return images;
-}
-function createImageObject(path, height, width, age) {
-    return {
-       path: path,
-       height: height,
-       width: width,
-        age: age
-    };
 }
 function applyAxisToImages(images, axisId) {
     axises[axisId].groups = createAxisGroups(images, axises[axisId].direction, axisId);
@@ -212,6 +195,17 @@ function initAxises() {
         XAxis.append(elem);
         axisItemPosX += group.size;
     });
+
+    let axisItemPosY = 0;
+    axises[1].groups.forEach(group => {
+        let elem = document.createElement("div");
+        elem.setAttribute("id", group.name);
+        elem.innerText = group.name;
+        elem.style.left = "50px";
+        elem.style.top = sizeMultiplier * axisItemPosY + "px";
+        YAxis.append(elem);
+        axisItemPosY += group.size;
+    });
     updateAxises();
 }
 function updateAxises() {
@@ -228,14 +222,51 @@ function updateAxises() {
         }
         axisItemPosX += group.size;
     });
+
+    let axisItemPosY = 0;
+    axises[1].groups.forEach(group => {
+        let elem = document.getElementById(group.name);
+        elem.style.left = "10px";
+        let top = distanceAround + (sizeMultiplier * axisItemPosY) - currentScrollY;
+        elem.style.top = top + "px";
+        if (top < vh(10) || top > vh(90) - elem.offsetHeight) {
+            elem.style.opacity = "0";
+        } else {
+            elem.style.opacity = "1";
+        }
+        axisItemPosY += group.size;
+    });
 }
 function zoomIn() {
+    currentScrollX /= zoomSpeed;
+    currentScrollY /= zoomSpeed;
+
     if (sizeMultiplier >= maxZoomIn) {
-        sizeMultiplier *= zoomSpeed;
+      sizeMultiplier *= zoomSpeed;
+    }
+
+    remapImages();
+    updateAxises();
+}
+function doubleClick() {
+    reorder();
+}
+
+function reorder() {
+
+    let i = getRandomInt(2);
+    if(axises[i].sort === 'up') {
+        axises[i].sort = 'down';
+    } else {
+        axises[i].sort = 'up';
     }
     remapImages();
     updateAxises();
 }
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
 function scroll() {
     let doc = document.documentElement;
     currentScrollX = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);

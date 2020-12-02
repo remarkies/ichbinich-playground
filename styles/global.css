@@ -1,0 +1,39 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.nav {
+    position: fixed;
+    background: transparent;
+    width: 100vw;
+    z-index: 100;
+    color: black;
+}
+
+.nav-items {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:visited {
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+    text-decoration: none;
+    margin: 8px;
+}
