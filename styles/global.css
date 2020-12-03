@@ -1,6 +1,15 @@
 html, body {
     margin: 0;
     padding: 0;
+
+    font-family: 'Montserrat', sans-serif;
+    font-family: 'Libre Baskerville', serif;
+
+    cursor: grab;
+}
+
+::-webkit-scrollbar {
+    display: none;
 }
 
 .nav {

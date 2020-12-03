@@ -1,9 +1,14 @@
+.axis {
+    color: #ccc;
+    font-size: 1em;
+    background: transparent;
+    position: fixed;
+}
+
 #x-Axis {
     top: 70px;
-    position: fixed;
     width: 80vw;
     height: 2px;
-    background: black;
     left: 50%;
     margin-left: -40vw;
 }
@@ -16,10 +21,8 @@
 
 #y-Axis {
     left: 70px;
-    position: fixed;
     height: 80vh;
     width: 2px;
-    background: black;
     top: 50%;
     margin-top: -40vh;
 }
@@ -30,8 +33,17 @@
     left: 0;
     top: 0;
     text-align: right;
-    width: 50px;
+    margin-left: 50px;
 }
+
+h1 {
+    position: fixed;
+    top: 70px;
+    left: 150px;
+    color: #cccccc;
+    font-size: 2rem;
+}
+
 
 #image-list {
     position: relative;
@@ -42,4 +54,6 @@
     transition: 1s;
     left: 0;
     top: 0;
+    padding: 10px;
+    pointer-events: none;
 }

@@ -1,14 +1,19 @@
 let ImageList = document.getElementById('image-list');
+
+window.addEventListener('DOMMouseScroll', scroll, false); // older FF
+window.addEventListener(wheelEvent, scroll, wheelOpt); // modern desktop
+window.addEventListener('touchmove', scroll, wheelOpt); // mobile
+window.addEventListener('keydown', scroll, false);
 let XAxis = document.getElementById('x-Axis');
 let YAxis = document.getElementById('y-Axis');
-window.addEventListener("scroll", scroll);
 ImageList.addEventListener('dblclick', doubleClick);
+ImageList.addEventListener('mousedown', event => mouseDownHandler(event));
 window.addEventListener('keydown', keyDown);
 let distanceAround = vh(20);
 let sizeMultiplier = 2;
 let zoomSpeed = 1.2;
-let maxZoomIn = 0.2;
-let minZoomIn = 10;
+let maxZoom = 8;
+let minZoom = 0.6;
 let currentScrollX = 0;
 let currentScrollY = 0;
 
@@ -19,6 +24,8 @@ let axises = [
 
 loadImages();
 initAxises();
+setCurrentScroll();
+//disableScroll();
 
 // image functions
 function loadImages() {
@@ -240,22 +247,21 @@ function updateAxises() {
     });
 }
 function zoomIn() {
-    currentScrollX /= zoomSpeed;
-    currentScrollY /= zoomSpeed;
+    //currentScrollX /= zoomSpeed;
+    //currentScrollY /= zoomSpeed;
 
-    if (sizeMultiplier >= maxZoomIn) {
+    if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
     }
 
     remapImages();
     updateAxises();
 }
-
 function zoomOut() {
-    currentScrollX *= zoomSpeed;
-    currentScrollY *= zoomSpeed;
+    //currentScrollX *= zoomSpeed;
+    //currentScrollY *= zoomSpeed;
 
-    if (sizeMultiplier < minZoomIn) {
+    if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
     }
 
@@ -266,7 +272,6 @@ function zoomOut() {
 function doubleClick() {
     reorder();
 }
-
 function keyDown(event) {
     if(event.key === 'ArrowRight') {
         zoomIn();
@@ -276,7 +281,6 @@ function keyDown(event) {
         zoomOut();
     }
 }
-
 function reorder() {
 
     let i = getRandomInt(2);
@@ -291,12 +295,21 @@ function reorder() {
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
+let lastScroll = 0;
+function scroll(event) {
+    document.documentElement.scrollTop = currentScrollY + (event.clientY - (window.innerHeight / 2));
+    document.documentElement.scrollLeft = currentScrollX + (event.clientX - (window.innerWidth / 2));
 
-function scroll() {
-    let doc = document.documentElement;
-    currentScrollX = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
-    currentScrollY = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+    event.preventDefault();
+    if (event.deltaY > 0) {
+        zoomOut();
+    } else {
+        zoomIn();
+    }
+
     updateAxises();
+    setCurrentScroll();
+    lastScroll = event.deltaY;
 }
 function vh(v) {
     let h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -305,4 +318,42 @@ function vh(v) {
 function vw(v) {
     let w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     return (v * w) / 100;
+}
+
+let pos = { top: 0, left: 0, x: 0, y: 0 };
+const mouseDownHandler = function(e) {
+    ImageList.style.cursor = 'grabbing';
+    ImageList.style.userSelect = 'none';
+    pos = {
+        // The current scroll
+        left: currentScrollX,
+        top: currentScrollY,
+        // Get the current mouse position
+        x: e.clientX,
+        y: e.clientY,
+    };
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+};
+const mouseUpHandler = function() {
+    ImageList.style.cursor = 'grab';
+    ImageList.style.removeProperty('user-select');
+
+    document.removeEventListener("mousemove", mouseMoveHandler, { passive: true });
+    document.removeEventListener("mouseup", mouseUpHandler, { passive: true });
+};
+const mouseMoveHandler = function(e) {
+    // How far the mouse has been moved
+    const dx = e.clientX - pos.x;
+    const dy = e.clientY - pos.y;
+    // Scroll the element
+    document.documentElement.scrollTop = pos.top - dy;
+    document.documentElement.scrollLeft = pos.left - dx;
+    setCurrentScroll();
+    updateAxises();
+};
+
+function setCurrentScroll() {
+    currentScrollX = (window.pageXOffset || document.documentElement.scrollLeft) - (document.documentElement.clientLeft || 0);
+    currentScrollY = (window.pageYOffset || document.documentElement.scrollTop)  - (document.documentElement.clientTop || 0);
 }
