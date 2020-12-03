@@ -3,10 +3,12 @@ let XAxis = document.getElementById('x-Axis');
 let YAxis = document.getElementById('y-Axis');
 window.addEventListener("scroll", scroll);
 ImageList.addEventListener('dblclick', doubleClick);
+window.addEventListener('keydown', keyDown);
 let distanceAround = vh(20);
 let sizeMultiplier = 2;
 let zoomSpeed = 1.2;
 let maxZoomIn = 0.2;
+let minZoomIn = 10;
 let currentScrollX = 0;
 let currentScrollY = 0;
 
@@ -248,8 +250,31 @@ function zoomIn() {
     remapImages();
     updateAxises();
 }
+
+function zoomOut() {
+    currentScrollX *= zoomSpeed;
+    currentScrollY *= zoomSpeed;
+
+    if (sizeMultiplier < minZoomIn) {
+        sizeMultiplier /= zoomSpeed;
+    }
+
+    remapImages();
+    updateAxises();
+}
+
 function doubleClick() {
     reorder();
+}
+
+function keyDown(event) {
+    if(event.key === 'ArrowRight') {
+        zoomIn();
+    }
+
+    if(event.key === 'ArrowLeft') {
+        zoomOut();
+    }
 }
 
 function reorder() {
