@@ -16,6 +16,7 @@ let minZoom = 1.2;
 let currentScrollX = 0;
 let currentScrollY = 0;
 let paddingBetweenGroups = 5;
+let paddingBetweenImages = 10;
 let imageNameZoom = {
     min: 2,
     max: 10
@@ -32,6 +33,7 @@ handleImageNames();
 initAxises();
 setCurrentScroll();
 disableScroll(scroll);
+remapImages();
 
 // image functions
 function loadImages() {
@@ -196,13 +198,17 @@ function calcVolumeOfImage(img) {
 }
 function remapImages() {
     let images = initImages();
+    let addedImages = [];
 
     images.forEach(img => {
         let elem = document.getElementById(img.id);
         elem.style.height = (sizeMultiplier * img.height) + 'px';
         elem.style.width = (sizeMultiplier * img.width) + 'px';
-        elem.style.left = img.posX + "px"
-        elem.style.top = img.posY + "px"
+
+        let imagesAtSameSpot = addedImages.filter(o => o.posX === img.posX && o.posY === img.posY);
+        elem.style.left = (img.posX + (imagesAtSameSpot.length * paddingBetweenImages * sizeMultiplier)) + "px"
+        elem.style.top = (img.posY + (imagesAtSameSpot.length * paddingBetweenImages * sizeMultiplier)) + "px"
+        addedImages.push(img);
     });
 }
 
@@ -260,7 +266,7 @@ function updateAxises() {
         axisItemPosY += group.size;
     });
 }
-function zoomIn(event) {
+function zoomIn() {
     if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
         document.documentElement.scrollTop = (currentScrollY * zoomSpeed) + 10;
@@ -270,7 +276,7 @@ function zoomIn(event) {
     remapImages();
     updateAxises();
 }
-function zoomOut(event) {
+function zoomOut() {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
         document.documentElement.scrollTop = (currentScrollY / zoomSpeed) - 10;
@@ -296,6 +302,12 @@ function handleImageNames() {
     }
 }
 
+function setTransitionOfImages(transition) {
+    let images = document.getElementsByClassName('imageItem');
+    for(let i = 0; i < images.length; i++) {
+        images[i].style.transition = transition + 's';
+    }
+}
 
 function doubleClick(event) {
     if(event.clientY < 100) {
@@ -317,6 +329,7 @@ function keyDown(event) {
     }
 }
 function reorder(axis) {
+    setTransitionOfImages(1);
     if(axises[axis].sort === 'up') {
         axises[axis].sort = 'down';
     } else {
@@ -324,6 +337,7 @@ function reorder(axis) {
     }
     remapImages();
     updateAxises();
+    setTransitionOfImages(0);
 }
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
@@ -340,10 +354,9 @@ function scroll(event) {
     }
 
     updateAxises();
-
     handleImageNames();
-
     lastScroll = event.deltaY;
+    setCurrentScroll();
 }
 function vh(v) {
     let h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
