@@ -1,49 +1,63 @@
 let ImageList = document.getElementById('image-list');
 
-window.addEventListener('DOMMouseScroll', scroll, false); // older FF
-window.addEventListener(wheelEvent, scroll, wheelOpt); // modern desktop
-window.addEventListener('touchmove', scroll, wheelOpt); // mobile
-window.addEventListener('keydown', scroll, false);
+window.addEventListener('keydown', keyDown);
+
+ImageList.addEventListener('dblclick', event => doubleClick(event));
+ImageList.addEventListener('mousedown', event => mouseDownHandler(event));
+
 let XAxis = document.getElementById('x-Axis');
 let YAxis = document.getElementById('y-Axis');
-ImageList.addEventListener('dblclick', doubleClick);
-ImageList.addEventListener('mousedown', event => mouseDownHandler(event));
-window.addEventListener('keydown', keyDown);
+
 let distanceAround = vh(20);
 let sizeMultiplier = 2;
-let zoomSpeed = 1.2;
+let zoomSpeed = 1.03;
 let maxZoom = 8;
-let minZoom = 0.6;
+let minZoom = 1.2;
 let currentScrollX = 0;
 let currentScrollY = 0;
+let paddingBetweenGroups = 5;
+let imageNameZoom = {
+    min: 2,
+    max: 10
+};
+
 
 let axises = [
     { name: 'age', direction: 'x', sort: 'down', groups: [] },
     { name: 'size', direction: 'y', sort: 'up', groups: [] }
 ];
-
+let images = getImages();
 loadImages();
+handleImageNames();
 initAxises();
 setCurrentScroll();
-//disableScroll();
+disableScroll(scroll);
 
 // image functions
 function loadImages() {
     let images = initImages();
     images.forEach(img => {
+        let div = document.createElement("div");
+        div.className = 'imageItem';
+        div.style.height = (sizeMultiplier * img.height) + 'px';
+        div.style.width = (sizeMultiplier * img.width) + 'px';
+        div.setAttribute("id", img.id);
+        div.style.left = img.posX + "px";
+        div.style.top = img.posY + "px";
+
+        let divImageName = document.createElement("div");
+        divImageName.className = 'imageName';
+        divImageName.innerText = img.name;
+        div.append(divImageName);
+
         let elem = document.createElement("img");
         elem.setAttribute("src", "./images/" + img.path);
-        elem.setAttribute("height", sizeMultiplier * img.height);
-        elem.setAttribute("width", sizeMultiplier * img.width);
-        elem.setAttribute("id", img.path);
-        elem.style.left = img.posX + "px";
-        elem.style.top = img.posY + "px";
-        ImageList.append(elem);
-    });
+        div.append(elem);
 
+        ImageList.append(div);
+    });
 }
 function initImages() {
-    let images = getImages();
     images = applyAxisToImages(images, 0);
     images = applyAxisToImages(images, 1);
     return images;
@@ -127,13 +141,13 @@ function createAxisGroups(images, axisDirection, axisId) {
             if (axisGroupExists(axisGroups, img.age)) {
                 axisGroups = updateAxisGroupSizeIfNecessary(axisGroups, img, axisId);
             } else {
-                axisGroups.push(createAxisGroup(img.age, axisDirection === 'x' ? img.width : img.height));
+                axisGroups.push(createAxisGroup(img.age, paddingBetweenGroups + (axisDirection === 'x' ? img.width : img.height) + paddingBetweenGroups));
             }
         } else if(axises[axisId].name === 'size') {
             if (axisGroupExists(axisGroups, calcVolumeOfImage(img))) {
                 axisGroups = updateAxisGroupSizeIfNecessary(axisGroups, img, axisId);
             } else {
-                axisGroups.push(createAxisGroup(calcVolumeOfImage(img), axisDirection === 'x' ? img.width : img.height));
+                axisGroups.push(createAxisGroup(calcVolumeOfImage(img), paddingBetweenGroups + (axisDirection === 'x' ? img.width : img.height) + paddingBetweenGroups));
             }
         } else {
             throw new Error('createAxisGroups: xAxis not implemented.');
@@ -161,15 +175,15 @@ function updateAxisGroupSizeIfNecessary(axisGroups, img, axisId) {
     for(let i = 0; i < axisGroups.length; i++) {
         if (axises[axisId].name === 'age') {
             if (axisGroups[i].name === img.age) {
-                if(axisGroups[i].size < img.width) {
-                    axisGroups[i].size = img.width;
+                if(axisGroups[i].size - (2 * paddingBetweenGroups) < + img.width) {
+                    axisGroups[i].size = (2 * paddingBetweenGroups) + img.width;
                     break;
                 }
             }
         } else if (axises[axisId].name === 'size') {
             if (axisGroups[i].name === calcVolumeOfImage(img)) {
-                if(axisGroups[i].size < img.width) {
-                    axisGroups[i].size = img.width;
+                if(axisGroups[i].size - (2 * paddingBetweenGroups) < img.height) {
+                    axisGroups[i].size = (2 * paddingBetweenGroups) + img.height;
                     break;
                 }
             }
@@ -184,9 +198,9 @@ function remapImages() {
     let images = initImages();
 
     images.forEach(img => {
-        let elem = document.getElementById(img.path);
-        elem.setAttribute("height", sizeMultiplier * img.height);
-        elem.setAttribute("width", sizeMultiplier * img.width);
+        let elem = document.getElementById(img.id);
+        elem.style.height = (sizeMultiplier * img.height) + 'px';
+        elem.style.width = (sizeMultiplier * img.width) + 'px';
         elem.style.left = img.posX + "px"
         elem.style.top = img.posY + "px"
     });
@@ -246,31 +260,56 @@ function updateAxises() {
         axisItemPosY += group.size;
     });
 }
-function zoomIn() {
-    //currentScrollX /= zoomSpeed;
-    //currentScrollY /= zoomSpeed;
-
+function zoomIn(event) {
     if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
+      setZoomScroll(event, 4);
     }
 
     remapImages();
     updateAxises();
 }
-function zoomOut() {
-    //currentScrollX *= zoomSpeed;
-    //currentScrollY *= zoomSpeed;
-
+function setZoomScroll(event, strength) {
+    let mDifY = event.clientY - (window.innerHeight / 2);
+    let mDifX = event.clientX - (window.innerWidth / 2);
+    document.documentElement.scrollTop = currentScrollY + (mDifY / strength);
+    document.documentElement.scrollLeft = currentScrollX + (mDifX / strength);
+}
+function zoomOut(event) {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
+        setZoomScroll(event, 10);
     }
 
     remapImages();
     updateAxises();
 }
 
-function doubleClick() {
-    reorder();
+function handleImageNames() {
+    //console.log(sizeMultiplier);
+    let imageNames = document.getElementsByClassName('imageName');
+    for(let i = 0; i < imageNames.length; i++) {
+        let imageName = imageNames[i];
+
+        if(sizeMultiplier > imageNameZoom.min && sizeMultiplier < imageNameZoom.max) {
+            imageName.style.display = 'block';
+            imageName.style.marginTop = ((images.filter(o => o.name === imageName.innerText)[0].height * sizeMultiplier) + 5) + 'px';
+        } else {
+            imageName.style.display = 'none';
+        }
+    }
+}
+
+
+function doubleClick(event) {
+    if(event.clientY < 100) {
+        reorder(0);
+    }
+
+    if(event.clientX < 100) {
+        reorder(1)
+    }
+
 }
 function keyDown(event) {
     if(event.key === 'ArrowRight') {
@@ -281,13 +320,11 @@ function keyDown(event) {
         zoomOut();
     }
 }
-function reorder() {
-
-    let i = getRandomInt(2);
-    if(axises[i].sort === 'up') {
-        axises[i].sort = 'down';
+function reorder(axis) {
+    if(axises[axis].sort === 'up') {
+        axises[axis].sort = 'down';
     } else {
-        axises[i].sort = 'up';
+        axises[axis].sort = 'up';
     }
     remapImages();
     updateAxises();
@@ -297,18 +334,19 @@ function getRandomInt(max) {
 }
 let lastScroll = 0;
 function scroll(event) {
-    document.documentElement.scrollTop = currentScrollY + (event.clientY - (window.innerHeight / 2));
-    document.documentElement.scrollLeft = currentScrollX + (event.clientX - (window.innerWidth / 2));
+    setCurrentScroll();
 
     event.preventDefault();
     if (event.deltaY > 0) {
-        zoomOut();
+        zoomOut(event);
     } else {
-        zoomIn();
+        zoomIn(event);
     }
 
     updateAxises();
-    setCurrentScroll();
+
+    handleImageNames();
+
     lastScroll = event.deltaY;
 }
 function vh(v) {

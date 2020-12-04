@@ -25,11 +25,10 @@ var wheelOpt = supportsPassive ? { passive: false } : false;
 var wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
 
 // call this to Disable
-function disableScroll() {
-    window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
-    window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
-    window.addEventListener('touchmove', preventDefault, wheelOpt); // mobile
-    window.addEventListener('keydown', preventDefaultForScrollKeys, false);
+function disableScroll(scrollCallback) {
+    window.addEventListener('DOMMouseScroll', scrollCallback, false); // older FF
+    window.addEventListener(wheelEvent, scrollCallback, wheelOpt); // modern desktop
+    window.addEventListener('touchmove', scrollCallback, wheelOpt); // mobile
 }
 
 // call this to Enable
