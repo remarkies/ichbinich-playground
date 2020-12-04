@@ -263,22 +263,18 @@ function updateAxises() {
 function zoomIn(event) {
     if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
-      setZoomScroll(event, 4);
+        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) + 10;
+        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) + 10;
     }
 
     remapImages();
     updateAxises();
 }
-function setZoomScroll(event, strength) {
-    let mDifY = event.clientY - (window.innerHeight / 2);
-    let mDifX = event.clientX - (window.innerWidth / 2);
-    document.documentElement.scrollTop = currentScrollY + (mDifY / strength);
-    document.documentElement.scrollLeft = currentScrollX + (mDifX / strength);
-}
 function zoomOut(event) {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
-        setZoomScroll(event, 10);
+        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) - 10;
+        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) - 10;
     }
 
     remapImages();
