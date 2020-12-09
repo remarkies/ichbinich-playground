@@ -1,6 +1,6 @@
 .axis {
     color: #ccc;
-    font-size: 1em;
+    font-size: 0.7em;
     background: transparent;
     position: fixed;
 }
@@ -12,14 +12,29 @@
     left: 50%;
     margin-left: -40vw;
 }
-#x-Axis div {
+#x-Axis .axis-group {
     position: fixed;
-    transition: 1s;
     left: 0;
     top: 0;
 }
 
-#y-Axis {
+.divider {
+    display: block;
+    background: rgba(211, 211, 211, 0.50);
+    position: absolute;
+}
+
+.x-divider {
+    height: calc(100vh - 50px);
+    width: 1px;
+}
+
+.y-divider {
+    width: calc(100vw - 50px);
+    height: 1px;
+}
+
+#y-Axis  {
     left: 70px;
     height: 80vh;
     width: 2px;
@@ -27,9 +42,8 @@
     margin-top: -40vh;
 }
 
-#y-Axis div {
+#y-Axis .axis-group {
     position: fixed;
-    transition: 1s;
     left: 0;
     top: 0;
     text-align: right;
@@ -59,7 +73,6 @@ h1 {
     background: transparent;
     z-index: -.1;
     font-size: 1rem;
-    font-family: 'Montserrat', sans-serif;
     color: #333;
 }
 

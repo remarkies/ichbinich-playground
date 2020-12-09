@@ -21,11 +21,25 @@ let imageNameZoom = {
     min: 2,
     max: 10
 };
+let axisSizeDivider = 1;
 
 
 let axises = [
-    { name: 'age', direction: 'x', sort: 'down', groups: [] },
-    { name: 'size', direction: 'y', sort: 'up', groups: [] }
+    { name: 'age', direction: 'x', sort: 'down', groups: [],
+        getValueToCompare(img) { return img.age; },
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    },
+    { name: 'size', direction: 'y', sort: 'up', groups: [],
+        getValueToCompare(img) { return calcVolumeOfImage(img); } ,
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    }
+    /*
+    { name: 'group', direction: 'y', sort: 'up', groups: [],
+        getValueToCompare(img) { return img.groupName; },
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    },
+    *
+     */
 ];
 let images = getImages();
 loadImages();
@@ -64,16 +78,19 @@ function initImages() {
     images = applyAxisToImages(images, 1);
     return images;
 }
+
+// magic stuff happening down here
 function applyAxisToImages(images, axisId) {
     axises[axisId].groups = createAxisGroups(images, axises[axisId].direction, axisId);
     switch (axises[axisId].sort) {
         case 'up':
-            axises[axisId].groups = axises[axisId].groups.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+            axises[axisId].groups = axises[axisId].groups.sort((a,b) => axises[axisId].compare(a,b));
             break;
         case 'down':
-            axises[axisId].groups = axises[axisId].groups.sort((a,b) => (a.name < b.name) ? 1 : ((b.name < a.name) ? -1 : 0));
+            axises[axisId].groups = axises[axisId].groups.sort((a,b) => axises[axisId].compare(a,b) * -1);
         default:
             new Error('Sort direction ' + axises[axisId].sort + ' of axis not implemented yet.')
+            break;
     }
 
     applyAxisSizesToBoard(axises[axisId].groups, axises[axisId].direction);
@@ -121,41 +138,39 @@ function calcSizeOfAxisGroups(axisGroups) {
 function calcAbsolutePositionOfImage(image, axisGroups, axisId) {
     let absoluteSize = 0;
     for (let i = 0; i < axisGroups.length; i++) {
-        if (axises[axisId].name === 'age') {
-            if (axisGroups[i].name === image.age) {
-                break;
-            }
-        } else if (axises[axisId].name === 'size') {
-            if (axisGroups[i].name === calcVolumeOfImage(image)) {
-                break;
-            }
-        } else {
-            throw new Error('calcAbsolutePositionOfImage: Axis ' + axises[axisId].name + ' not implemented yet.');
-        }
         absoluteSize += axisGroups[i].size;
+        if(axisGroups[i].name === axises[axisId].getValueToCompare(image)) {
+            break;
+        }
     }
     return distanceAround + (absoluteSize * sizeMultiplier);
 }
 function createAxisGroups(images, axisDirection, axisId) {
     let axisGroups = [];
+    let axisSize = getBiggestSize(images);
     images.forEach(img => {
-        if (axises[axisId].name === 'age') {
-            if (axisGroupExists(axisGroups, img.age)) {
-                axisGroups = updateAxisGroupSizeIfNecessary(axisGroups, img, axisId);
-            } else {
-                axisGroups.push(createAxisGroup(img.age, paddingBetweenGroups + (axisDirection === 'x' ? img.width : img.height) + paddingBetweenGroups));
-            }
-        } else if(axises[axisId].name === 'size') {
-            if (axisGroupExists(axisGroups, calcVolumeOfImage(img))) {
-                axisGroups = updateAxisGroupSizeIfNecessary(axisGroups, img, axisId);
-            } else {
-                axisGroups.push(createAxisGroup(calcVolumeOfImage(img), paddingBetweenGroups + (axisDirection === 'x' ? img.width : img.height) + paddingBetweenGroups));
-            }
+        if (axisGroupExists(axisGroups, axises[axisId].getValueToCompare(img))) {
+            axisGroups = updateAxisGroupSizeIfNecessary(axisGroups, img, axisId);
         } else {
-            throw new Error('createAxisGroups: xAxis not implemented.');
+            axisGroups.push(createAxisGroup(axises[axisId].getValueToCompare(img), paddingBetweenGroups + (axisDirection === 'x' ? axisSize.x : axisSize.y) + paddingBetweenGroups));
+            //axisGroups.push(createAxisGroup(img.age, paddingBetweenGroups + (axisDirection === 'x' ? img.width : img.height) + paddingBetweenGroups));
         }
     });
     return axisGroups;
+}
+function getBiggestSize(images) {
+    let biggestSize = { x: 0, y: 0 };
+    images.forEach(img => {
+        if(img.width > biggestSize.x) {
+            biggestSize.x = img.width;
+        }
+        if(img.height > biggestSize.y) {
+            biggestSize.y = img.height;
+        }
+    });
+    biggestSize = { x: biggestSize.x / axisSizeDivider, y: biggestSize.y / axisSizeDivider}
+
+    return biggestSize;
 }
 function axisGroupExists(axisGroups, name) {
     let exists = false;
@@ -175,19 +190,10 @@ function createAxisGroup(name, size) {
 }
 function updateAxisGroupSizeIfNecessary(axisGroups, img, axisId) {
     for(let i = 0; i < axisGroups.length; i++) {
-        if (axises[axisId].name === 'age') {
-            if (axisGroups[i].name === img.age) {
-                if(axisGroups[i].size - (2 * paddingBetweenGroups) < + img.width) {
-                    axisGroups[i].size = (2 * paddingBetweenGroups) + img.width;
-                    break;
-                }
-            }
-        } else if (axises[axisId].name === 'size') {
-            if (axisGroups[i].name === calcVolumeOfImage(img)) {
-                if(axisGroups[i].size - (2 * paddingBetweenGroups) < img.height) {
-                    axisGroups[i].size = (2 * paddingBetweenGroups) + img.height;
-                    break;
-                }
+        if (axisGroups[i].name === axises[axisId].getValueToCompare(img)) {
+            if(axisGroups[i].size - (2 * paddingBetweenGroups) < + img.width) {
+                axisGroups[i].size = (2 * paddingBetweenGroups) + img.width;
+                break;
             }
         }
     }
@@ -218,9 +224,15 @@ function initAxises() {
     axises[0].groups.forEach(group => {
         let elem = document.createElement("div");
         elem.setAttribute("id", group.name);
-        elem.innerText = group.name;
+        elem.className = "axis-group";
         elem.style.top = "50px";
         elem.style.left = sizeMultiplier * axisItemPosX + "px";
+        let text = document.createElement("p");
+        text.textContent = group.name;
+        let divider = document.createElement("div");
+        divider.className = "divider x-divider";
+        elem.append(text);
+        elem.append(divider);
         XAxis.append(elem);
         axisItemPosX += group.size;
     });
@@ -229,9 +241,15 @@ function initAxises() {
     axises[1].groups.forEach(group => {
         let elem = document.createElement("div");
         elem.setAttribute("id", group.name);
-        elem.innerText = group.name;
+        elem.className = "axis-group";
         elem.style.left = "50px";
         elem.style.top = sizeMultiplier * axisItemPosY + "px";
+        let text = document.createElement("p");
+        text.textContent = group.name;
+        let divider = document.createElement("div");
+        divider.className = "divider y-divider";
+        elem.append(divider);
+        elem.append(text)
         YAxis.append(elem);
         axisItemPosY += group.size;
     });
@@ -339,9 +357,6 @@ function reorder(axis) {
     updateAxises();
     setTransitionOfImages(0);
 }
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
 let lastScroll = 0;
 function scroll(event) {
     setCurrentScroll();
@@ -353,10 +368,10 @@ function scroll(event) {
         zoomIn(event);
     }
 
-    updateAxises();
     handleImageNames();
     lastScroll = event.deltaY;
     setCurrentScroll();
+    updateAxises();
 }
 function vh(v) {
     let h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
