@@ -8,11 +8,11 @@ ImageList.addEventListener('mousedown', event => mouseDownHandler(event));
 let XAxis = document.getElementById('x-Axis');
 let YAxis = document.getElementById('y-Axis');
 
-let distanceAround = vh(20);
-let sizeMultiplier = 2;
-let zoomSpeed = 1.03;
+let distanceAround = vh(100);
+let sizeMultiplier = 0.5;
+let zoomSpeed = 1.07;
 let maxZoom = 8;
-let minZoom = 1.2;
+let minZoom = 0.5;
 let currentScrollX = 0;
 let currentScrollY = 0;
 let paddingBetweenGroups = 5;
@@ -29,25 +29,44 @@ let axises = [
         getValueToCompare(img) { return img.age; },
         compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
     },
+    { name: 'color', direction: 'y', sort: 'up', groups: [],
+        getValueToCompare(img) { return img.palette.DarkVibrant?.hex; } ,
+        compare(a,b) {
+            var colorA = new Color(a);
+            var colorB = new Color(b);
+            constructColor(colorA);
+            constructColor(colorB);
+            return compareColors(colorA, colorB);
+        }
+    }
+    /*
+    { name: 'age', direction: 'y', sort: 'down', groups: [],
+        getValueToCompare(img) { return img.age; },
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    }
     { name: 'size', direction: 'y', sort: 'up', groups: [],
         getValueToCompare(img) { return calcVolumeOfImage(img); } ,
         compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
     }
-    /*
     { name: 'group', direction: 'y', sort: 'up', groups: [],
         getValueToCompare(img) { return img.groupName; },
         compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
     },
-    *
-     */
+    */
 ];
-let images = getImages();
-loadImages();
-handleImageNames();
-initAxises();
-setCurrentScroll();
-disableScroll(scroll);
-remapImages();
+let images = [];
+init();
+async function init() {
+    images = await getImages();
+    loadImages();
+    handleImageNames();
+    initAxises();
+    setCurrentScroll();
+    disableScroll(scroll);
+    document.documentElement.scrollLeft = distanceAround / 2;
+    remapImages();
+    updateAxises()
+}
 
 // image functions
 function loadImages() {
@@ -138,10 +157,11 @@ function calcSizeOfAxisGroups(axisGroups) {
 function calcAbsolutePositionOfImage(image, axisGroups, axisId) {
     let absoluteSize = 0;
     for (let i = 0; i < axisGroups.length; i++) {
-        absoluteSize += axisGroups[i].size;
         if(axisGroups[i].name === axises[axisId].getValueToCompare(image)) {
             break;
         }
+
+        absoluteSize += axisGroups[i].size;
     }
     return distanceAround + (absoluteSize * sizeMultiplier);
 }
@@ -225,6 +245,9 @@ function initAxises() {
         let elem = document.createElement("div");
         elem.setAttribute("id", group.name);
         elem.className = "axis-group";
+        if(axises[0].name === 'color'){
+            elem.style.color = group.name;
+        }
         elem.style.top = "50px";
         elem.style.left = sizeMultiplier * axisItemPosX + "px";
         let text = document.createElement("p");
@@ -242,6 +265,9 @@ function initAxises() {
         let elem = document.createElement("div");
         elem.setAttribute("id", group.name);
         elem.className = "axis-group";
+        if(axises[1].name === 'color'){
+            elem.style.color = group.name;
+        }
         elem.style.left = "50px";
         elem.style.top = sizeMultiplier * axisItemPosY + "px";
         let text = document.createElement("p");
@@ -287,8 +313,8 @@ function updateAxises() {
 function zoomIn() {
     if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) + 10;
-        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) + 10;
+        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) - 20;
+        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) - 15;
     }
 
     remapImages();
@@ -297,8 +323,8 @@ function zoomIn() {
 function zoomOut() {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) - 10;
-        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) - 10;
+        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) + 20;
+        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) + 15;
     }
 
     remapImages();
