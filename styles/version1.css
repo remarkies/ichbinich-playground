@@ -16,6 +16,16 @@
     position: fixed;
     left: 0;
     top: 0;
+    display: flex;
+}
+
+#x-Axis .axis-group p {
+    padding-left: 10px;
+    margin-top: 0px;
+}
+
+#y-Axis .axis-group p {
+    margin-top: 10px;
 }
 
 .divider {
@@ -23,6 +33,8 @@
     background: rgba(211, 211, 211, 0.50);
     position: absolute;
 }
+
+
 
 .x-divider {
     height: calc(100vh - 50px);
