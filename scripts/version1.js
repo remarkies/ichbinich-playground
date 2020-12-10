@@ -501,7 +501,6 @@ function doubleClick(event) {
 }
 function keyDown(event) {
     startLocation();
-    console.log('key down');
     if(event.key === 'ArrowRight') {
         zoomIn();
     }

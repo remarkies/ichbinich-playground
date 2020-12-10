@@ -26,11 +26,12 @@
 
 #y-Axis .axis-group p {
     margin-top: 10px;
+    opacity: 0.5;
 }
 
 .divider {
     display: block;
-    background: rgba(211, 211, 211, 0.20);
+    background: rgba(211, 211, 211, 0.1);
     position: absolute;
 }
 
