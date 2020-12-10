@@ -8,7 +8,9 @@ ImageList.addEventListener('mousedown', event => mouseDownHandler(event));
 let XAxis = document.getElementById('x-Axis');
 let YAxis = document.getElementById('y-Axis');
 
-let distanceAround = vh(100);
+let horizontalDistAround = vw(100);
+let verticalDistAround = vh(100);
+
 let sizeMultiplier = 0.5;
 let zoomSpeed = 1.07;
 let maxZoom = 8;
@@ -63,7 +65,8 @@ async function init() {
     initAxises();
     setCurrentScroll();
     disableScroll(scroll);
-    document.documentElement.scrollLeft = distanceAround / 2;
+    //document.documentElement.scrollLeft = horizontalDistAround / 2;
+    //document.documentElement.scrollTop = verticalDistAround / 2;
     remapImages();
     updateAxises()
 }
@@ -136,10 +139,10 @@ function applySizesToImages(images, axisGroups, axisDirection, axisId) {
 function applyAxisSizesToBoard(axisGroups, axisDirection) {
     switch (axisDirection) {
         case 'x':
-            ImageList.style.width = distanceAround + calcSizeOfAxisGroups(axisGroups) + distanceAround + "px";
+            ImageList.style.width = horizontalDistAround + calcSizeOfAxisGroups(axisGroups) + horizontalDistAround + "px";
             break;
         case 'y':
-            ImageList.style.height = distanceAround + calcSizeOfAxisGroups(axisGroups) + distanceAround + "px";
+            ImageList.style.height = verticalDistAround + calcSizeOfAxisGroups(axisGroups) + verticalDistAround + "px";
             break;
         default:
             throw Error('Apply axis sizes to board not possible on ' + axisDirection);
@@ -160,10 +163,14 @@ function calcAbsolutePositionOfImage(image, axisGroups, axisId) {
         if(axisGroups[i].name === axises[axisId].getValueToCompare(image)) {
             break;
         }
-
         absoluteSize += axisGroups[i].size;
     }
-    return distanceAround + (absoluteSize * sizeMultiplier);
+
+    if (axises[axisId].direction === 'x') {
+        return horizontalDistAround + (absoluteSize * sizeMultiplier);
+    } else if (axises[axisId].direction === 'y') {
+        return verticalDistAround + (absoluteSize * sizeMultiplier);
+    }
 }
 function createAxisGroups(images, axisDirection, axisId) {
     let axisGroups = [];
@@ -286,7 +293,7 @@ function updateAxises() {
     axises[0].groups.forEach(group => {
         let elem = document.getElementById(group.name);
         elem.style.top = "50px";
-        let left = distanceAround + (sizeMultiplier * axisItemPosX) - currentScrollX;
+        let left = horizontalDistAround + (sizeMultiplier * axisItemPosX) - currentScrollX;
         elem.style.left = left + "px";
         if (left < vw(10) || left > vw(90) - elem.offsetWidth) {
             elem.style.opacity = "0";
@@ -300,7 +307,7 @@ function updateAxises() {
     axises[1].groups.forEach(group => {
         let elem = document.getElementById(group.name);
         elem.style.left = "10px";
-        let top = distanceAround + (sizeMultiplier * axisItemPosY) - currentScrollY;
+        let top = verticalDistAround + (sizeMultiplier * axisItemPosY) - currentScrollY;
         elem.style.top = top + "px";
         if (top < vh(10) || top > vh(90) - elem.offsetHeight) {
             elem.style.opacity = "0";
