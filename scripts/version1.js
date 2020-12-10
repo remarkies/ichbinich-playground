@@ -320,8 +320,8 @@ function updateAxises() {
 function zoomIn() {
     if (sizeMultiplier < maxZoom) {
       sizeMultiplier *= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) - 20;
-        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) - 15;
+        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) - 30;
+        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) - 50;
     }
 
     remapImages();
@@ -330,8 +330,8 @@ function zoomIn() {
 function zoomOut() {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) + 20;
-        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) + 15;
+        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) + 30;
+        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) + 50;
     }
 
     remapImages();
