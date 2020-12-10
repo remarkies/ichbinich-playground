@@ -15,8 +15,10 @@ let sizeMultiplier = 0.5;
 let zoomSpeed = 1.07;
 let maxZoom = 8;
 let minZoom = 0.5;
-let currentScrollX = 0;
-let currentScrollY = 0;
+let zoomCorrection = {
+    x: 75,
+    y: 40
+}
 let paddingBetweenGroups = 5;
 let paddingBetweenImages = 10;
 let imageNameZoom = {
@@ -25,6 +27,7 @@ let imageNameZoom = {
 };
 let axisSizeDivider = 1;
 
+let pos = { top: 0, left: 0, x: 0, y: 0 };
 
 let axises = [
     { name: 'age', direction: 'x', sort: 'down', groups: [],
@@ -41,15 +44,18 @@ let axises = [
             return compareColors(colorA, colorB);
         }
     }
+
+    /*
+    { name: 'size', direction: 'y', sort: 'up', groups: [],
+        getValueToCompare(img) { return calcVolumeOfImage(img); } ,
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    }
     /*
     { name: 'age', direction: 'y', sort: 'down', groups: [],
         getValueToCompare(img) { return img.age; },
         compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
     }
-    { name: 'size', direction: 'y', sort: 'up', groups: [],
-        getValueToCompare(img) { return calcVolumeOfImage(img); } ,
-        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
-    }
+
     { name: 'group', direction: 'y', sort: 'up', groups: [],
         getValueToCompare(img) { return img.groupName; },
         compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
@@ -59,21 +65,26 @@ let axises = [
 let images = [];
 init();
 async function init() {
-    images = await getImages();
-    loadImages();
-    handleImageNames();
-    initAxises();
-    setCurrentScroll();
     disableScroll(scroll);
-    //document.documentElement.scrollLeft = horizontalDistAround / 2;
-    //document.documentElement.scrollTop = verticalDistAround / 2;
-    remapImages();
-    updateAxises()
+
+    images = await getImages();
+    calcImages();
+
+    createHtmlImages(images);
+    createHtmlAxises();
+
+    draw();
+}
+
+function draw() {
+    calcImages();
+    handleImageData();
+    resizeImages();
+    updateAxises();
 }
 
 // image functions
-function loadImages() {
-    let images = initImages();
+function createHtmlImages(images) {
     images.forEach(img => {
         let div = document.createElement("div");
         div.className = 'imageItem';
@@ -83,11 +94,20 @@ function loadImages() {
         div.style.left = img.posX + "px";
         div.style.top = img.posY + "px";
 
+        let divImageData = document.createElement("div");
+        divImageData.className = 'imageData';
+        divImageData.setAttribute('id', img.name);
         let divImageName = document.createElement("div");
         divImageName.className = 'imageName';
         divImageName.innerText = img.name;
-        div.append(divImageName);
+        divImageData.append(divImageName);
 
+        let divImageDescription = document.createElement("div");
+        divImageDescription.className = 'imageDescription';
+        divImageDescription.innerText = img.description;
+        divImageData.append(divImageDescription);
+
+        div.append(divImageData);
         let elem = document.createElement("img");
         elem.setAttribute("src", "./images/" + img.path);
         div.append(elem);
@@ -95,13 +115,12 @@ function loadImages() {
         ImageList.append(div);
     });
 }
-function initImages() {
-    images = applyAxisToImages(images, 0);
-    images = applyAxisToImages(images, 1);
-    return images;
-}
 
 // magic stuff happening down here
+function calcImages() {
+    images = applyAxisToImages(images, 0);
+    images = applyAxisToImages(images, 1);
+}
 function applyAxisToImages(images, axisId) {
     axises[axisId].groups = createAxisGroups(images, axises[axisId].direction, axisId);
     switch (axises[axisId].sort) {
@@ -229,8 +248,7 @@ function updateAxisGroupSizeIfNecessary(axisGroups, img, axisId) {
 function calcVolumeOfImage(img) {
     return img.height * img.width;
 }
-function remapImages() {
-    let images = initImages();
+function resizeImages() {
     let addedImages = [];
 
     images.forEach(img => {
@@ -246,7 +264,7 @@ function remapImages() {
 }
 
 // hud functions
-function initAxises() {
+function createHtmlAxises() {
     let axisItemPosX = 0;
     axises[0].groups.forEach(group => {
         let elem = document.createElement("div");
@@ -286,16 +304,15 @@ function initAxises() {
         YAxis.append(elem);
         axisItemPosY += group.size;
     });
-    updateAxises();
 }
 function updateAxises() {
     let axisItemPosX = 0;
     axises[0].groups.forEach(group => {
         let elem = document.getElementById(group.name);
         elem.style.top = "50px";
-        let left = horizontalDistAround + (sizeMultiplier * axisItemPosX) - currentScrollX;
+        let left = horizontalDistAround + (sizeMultiplier * axisItemPosX) - getCurrentScroll().x;
         elem.style.left = left + "px";
-        if (left < vw(10) || left > vw(90) - elem.offsetWidth) {
+        if (left < vw(5) || left > vw(95) - elem.offsetWidth) {
             elem.style.opacity = "0";
         } else {
             elem.style.opacity = "1";
@@ -307,9 +324,9 @@ function updateAxises() {
     axises[1].groups.forEach(group => {
         let elem = document.getElementById(group.name);
         elem.style.left = "10px";
-        let top = verticalDistAround + (sizeMultiplier * axisItemPosY) - currentScrollY;
+        let top = verticalDistAround + (sizeMultiplier * axisItemPosY) - getCurrentScroll().y;
         elem.style.top = top + "px";
-        if (top < vh(10) || top > vh(90) - elem.offsetHeight) {
+        if (top < vh(5) || top > vh(95) - elem.offsetHeight) {
             elem.style.opacity = "0";
         } else {
             elem.style.opacity = "1";
@@ -319,57 +336,183 @@ function updateAxises() {
 }
 function zoomIn() {
     if (sizeMultiplier < maxZoom) {
-      sizeMultiplier *= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY * zoomSpeed) - 30;
-        document.documentElement.scrollLeft = (currentScrollX * zoomSpeed) - 50;
+        sizeMultiplier *= zoomSpeed;
+        let scroll = getCurrentScroll()
+        setCurrentScroll(scroll.x * zoomSpeed - zoomCorrection.x, scroll.y * zoomSpeed - zoomCorrection.y);
+        draw();
     }
-
-    remapImages();
-    updateAxises();
 }
 function zoomOut() {
     if (sizeMultiplier > minZoom) {
         sizeMultiplier /= zoomSpeed;
-        document.documentElement.scrollTop = (currentScrollY / zoomSpeed) + 30;
-        document.documentElement.scrollLeft = (currentScrollX / zoomSpeed) + 50;
+        let scroll = getCurrentScroll()
+        setCurrentScroll(scroll.x / zoomSpeed + zoomCorrection.x, scroll.y / zoomSpeed + zoomCorrection.y);
+        draw();
     }
-
-    remapImages();
-    updateAxises();
 }
-
-function handleImageNames() {
+function handleImageData() {
     //console.log(sizeMultiplier);
-    let imageNames = document.getElementsByClassName('imageName');
-    for(let i = 0; i < imageNames.length; i++) {
-        let imageName = imageNames[i];
+    let imageDatas = document.getElementsByClassName('imageData');
+    for(let i = 0; i < imageDatas.length; i++) {
+        let imageData = imageDatas[i];
 
         if(sizeMultiplier > imageNameZoom.min && sizeMultiplier < imageNameZoom.max) {
-            imageName.style.display = 'block';
-            imageName.style.marginTop = ((images.filter(o => o.name === imageName.innerText)[0].height * sizeMultiplier) + 5) + 'px';
+            imageData.style.display = 'block';
+            //imageData.style.marginTop = ((images.filter(o => o.name === imageData.id)[0].height * sizeMultiplier) + 5) + 'px';
+            imageData.style.marginLeft = ((images.filter(o => o.name === imageData.id)[0].width * sizeMultiplier) + 24) + 'px';
         } else {
-            imageName.style.display = 'none';
+            imageData.style.display = 'none';
         }
     }
 }
-
 function setTransitionOfImages(transition) {
     let images = document.getElementsByClassName('imageItem');
     for(let i = 0; i < images.length; i++) {
         images[i].style.transition = transition + 's';
     }
 }
+function positionContentStart() {
+    positionContent(75, 75)
+}
+function positionContent(x, y) {
+    setCurrentScroll(vw(x), vh(y));
+}
 
+// triggers
 function doubleClick(event) {
+
+
     if(event.clientY < 100) {
         reorder(0);
-    }
-
-    if(event.clientX < 100) {
+    } else if(event.clientX < 100) {
         reorder(1)
+    } else {
+        locationSelected(event.clientX, event.clientY);
     }
 
 }
+let lastSelectedLocation = null;
+function locationSelected(x, y) {
+    let grps = getGroupsForLocation(x,y);
+    let imgs = getImagesForLocation(grps);
+
+
+    if (lastSelectedLocation === null) {
+        lastSelectedLocation = {
+            sizeMultiplier: sizeMultiplier,
+            scroll: getCurrentScroll(),
+            grps: grps
+        };
+
+        if (imgs.length > 0) {
+            let img = imgs[0];
+            sizeMultiplier = maxZoom;
+            draw();
+            let loc = locationToScrollTo(grps);
+            loc.left -= vw(50) - ((img.width / 2) * sizeMultiplier);
+            loc.top -= vh(50) - ((img.height / 2) * sizeMultiplier);
+            setCurrentScroll(loc.left, loc.top);
+            draw();
+        }
+    } else {
+        if (lastSelectedLocation.grps.xGroup.name !== grps.xGroup.name &&
+            lastSelectedLocation.grps.yGroup.name !== grps.yGroup.name) {
+            if (imgs.length > 0) {
+                let img = imgs[0];
+                sizeMultiplier = maxZoom;
+                draw();
+                let loc = locationToScrollTo(grps);
+                loc.left -= vw(50) - ((img.width / 2) * sizeMultiplier);
+                loc.top -= vh(50) - ((img.height / 2) * sizeMultiplier);
+                setCurrentScroll(loc.left, loc.top);
+                draw();
+            }
+        } else {
+            sizeMultiplier = lastSelectedLocation.sizeMultiplier;
+            draw();
+            setCurrentScroll(lastSelectedLocation.scroll.x, lastSelectedLocation.scroll.y);
+            draw();
+            lastSelectedLocation = null;
+        }
+    }
+
+
+
+
+    /*
+             {
+
+     */
+}
+
+function locationToScrollTo(grps) {
+    let left = 0;
+    let top = 0;
+    let axisItemPosX = 0;
+    let axisItemPosY = 0;
+
+    axises[0].groups.forEach(group => {
+        if (group.name === grps.xGroup.name) {
+            left = horizontalDistAround + (sizeMultiplier * axisItemPosX);
+        }
+
+        axisItemPosX += group.size;
+
+    });
+
+    axises[1].groups.forEach(group => {
+        if (group.name === grps.yGroup.name) {
+            top = verticalDistAround + (sizeMultiplier * axisItemPosY);
+        }
+
+        axisItemPosY += group.size;
+    });
+
+    return {
+        left: left,
+        top: top
+    };
+}
+
+function getGroupsForLocation(x, y) {
+    let axisItemPosX = 0;
+    let axisItemPosY = 0;
+    let xGroup = null;
+    let yGroup = null;
+
+    axises[0].groups.forEach(group => {
+        let left = horizontalDistAround + (sizeMultiplier * axisItemPosX) - getCurrentScroll().x;
+        if (left < x) {
+            xGroup = group;
+        }
+        axisItemPosX += group.size;
+    });
+
+    axises[1].groups.forEach(group => {
+        let top = verticalDistAround + (sizeMultiplier * axisItemPosY) - getCurrentScroll().y;
+        if (top < y) {
+            yGroup = group;
+        }
+        axisItemPosY += group.size;
+    });
+    console.log(xGroup.name, yGroup.name);
+    return {
+        xGroup: xGroup,
+        yGroup: yGroup
+    };
+}
+function getImagesForLocation(grps) {
+    let imgs = [];
+
+    images.forEach(img => {
+        if(grps.xGroup.name === axises[0].getValueToCompare(img) && grps.yGroup.name === axises[1].getValueToCompare(img)) {
+            imgs.push(img);
+        }
+    });
+
+    return imgs;
+}
+
 function keyDown(event) {
     if(event.key === 'ArrowRight') {
         zoomIn();
@@ -386,43 +529,25 @@ function reorder(axis) {
     } else {
         axises[axis].sort = 'up';
     }
-    remapImages();
-    updateAxises();
     setTransitionOfImages(0);
-}
-let lastScroll = 0;
-function scroll(event) {
-    setCurrentScroll();
 
+    draw();
+}
+function scroll(event) {
     event.preventDefault();
     if (event.deltaY > 0) {
         zoomOut(event);
     } else {
         zoomIn(event);
     }
-
-    handleImageNames();
-    lastScroll = event.deltaY;
-    setCurrentScroll();
-    updateAxises();
 }
-function vh(v) {
-    let h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    return (v * h) / 100;
-}
-function vw(v) {
-    let w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    return (v * w) / 100;
-}
-
-let pos = { top: 0, left: 0, x: 0, y: 0 };
 const mouseDownHandler = function(e) {
     ImageList.style.cursor = 'grabbing';
     ImageList.style.userSelect = 'none';
     pos = {
         // The current scroll
-        left: currentScrollX,
-        top: currentScrollY,
+        left: getCurrentScroll().x,
+        top: getCurrentScroll().y,
         // Get the current mouse position
         x: e.clientX,
         y: e.clientY,
@@ -441,14 +566,27 @@ const mouseMoveHandler = function(e) {
     // How far the mouse has been moved
     const dx = e.clientX - pos.x;
     const dy = e.clientY - pos.y;
-    // Scroll the element
-    document.documentElement.scrollTop = pos.top - dy;
-    document.documentElement.scrollLeft = pos.left - dx;
-    setCurrentScroll();
-    updateAxises();
+
+    setCurrentScroll(pos.left - dx, pos.top - dy);
+    draw();
 };
 
-function setCurrentScroll() {
-    currentScrollX = (window.pageXOffset || document.documentElement.scrollLeft) - (document.documentElement.clientLeft || 0);
-    currentScrollY = (window.pageYOffset || document.documentElement.scrollTop)  - (document.documentElement.clientTop || 0);
+// helpers
+function setCurrentScroll(x, y) {
+    document.documentElement.scrollLeft = x;
+    document.documentElement.scrollTop = y;
+}
+function getCurrentScroll() {
+    return {
+        x: document.documentElement.scrollLeft,
+        y: document.documentElement.scrollTop
+    }
+}
+function vh(v) {
+    let h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    return (v * h) / 100;
+}
+function vw(v) {
+    let w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    return (v * w) / 100;
 }

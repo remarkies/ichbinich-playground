@@ -1,6 +1,6 @@
 .axis {
     color: #ccc;
-    font-size: 0.7em;
+    font-size: 0.9em;
     background: transparent;
     position: fixed;
 }
@@ -30,7 +30,7 @@
 
 .divider {
     display: block;
-    background: rgba(211, 211, 211, 0.20);
+    background: rgba(211, 211, 211, 0.50);
     position: absolute;
 }
 
@@ -80,13 +80,33 @@ h1 {
     position: absolute;
 }
 
-.imageName {
+/*
+.imageData {
     position: absolute;
-    margin-top: -20px;
+    margin-top: -15px;
     background: transparent;
     z-index: -.1;
     font-size: 1rem;
     color: #333;
+}
+*/
+.imageData {
+    position: absolute;
+    background: transparent;
+    z-index: -.1;
+    font-size: 1rem;
+    color: #333;
+}
+
+.imageName {
+    margin-top: 4px;
+    font-weight: bolder;
+    margin-bottom: 4px;
+}
+
+.imageDescription {
+    width: 300px;
+    color: gray;
 }
 
 .imageItem img {

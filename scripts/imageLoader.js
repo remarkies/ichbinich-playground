@@ -35,7 +35,8 @@ function createImageObject(id, path, height, width, age, group, groupName, name)
         age: age,
         group: group,
         groupName: groupName,
-        name: name
+        name: name,
+        description:  "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. "
     };
 }
 function getRandYear() {
