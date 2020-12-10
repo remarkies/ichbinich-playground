@@ -26,7 +26,7 @@ let imageNameZoom = {
     max: 10
 };
 let axisSizeDivider = 1;
-
+let lastSelectedLocation = null;
 let pos = { top: 0, left: 0, x: 0, y: 0 };
 
 let axises = [
@@ -72,8 +72,8 @@ async function init() {
 
     createHtmlImages(images);
     createHtmlAxises();
-
     draw();
+    startLocation();
 }
 
 function draw() {
@@ -371,33 +371,36 @@ function setTransitionOfImages(transition) {
         images[i].style.transition = transition + 's';
     }
 }
-function positionContentStart() {
-    positionContent(75, 75)
+
+function startLocation() {
+    let grps = {
+      xGroup: axises[0].groups[0],
+      yGroup: axises[1].groups[0]
+    };
+    sizeMultiplier = minZoom;
+    draw();
+    let loc = locationToScrollTo(grps);
+    let horizontalWidth = calcSizeOfAxisGroups(axises[0].groups) / 2;
+    let verticalWidth = calcSizeOfAxisGroups(axises[1].groups) / 2;
+    loc.left -= vw(45) - (horizontalWidth * sizeMultiplier);
+    loc.top -= vh(35) - (verticalWidth * sizeMultiplier);
+    setCurrentScroll(loc.left, loc.top);
+    draw();
 }
-function positionContent(x, y) {
-    setCurrentScroll(vw(x), vh(y));
-}
 
-// triggers
-function doubleClick(event) {
-
-
-    if(event.clientY < 100) {
-        reorder(0);
-    } else if(event.clientX < 100) {
-        reorder(1)
-    } else {
-        locationSelected(event.clientX, event.clientY);
-    }
-
-}
-let lastSelectedLocation = null;
+// jump to image
 function locationSelected(x, y) {
     let grps = getGroupsForLocation(x,y);
     let imgs = getImagesForLocation(grps);
 
-
-    if (lastSelectedLocation === null) {
+    if (lastSelectedLocation !== null && lastSelectedLocation.grps.xGroup.name === grps.xGroup.name &&
+        lastSelectedLocation.grps.yGroup.name === grps.yGroup.name) {
+        sizeMultiplier = lastSelectedLocation.sizeMultiplier;
+        draw();
+        setCurrentScroll(lastSelectedLocation.scroll.x, lastSelectedLocation.scroll.y);
+        draw();
+        lastSelectedLocation = null;
+    } else {
         lastSelectedLocation = {
             sizeMultiplier: sizeMultiplier,
             scroll: getCurrentScroll(),
@@ -414,37 +417,8 @@ function locationSelected(x, y) {
             setCurrentScroll(loc.left, loc.top);
             draw();
         }
-    } else {
-        if (lastSelectedLocation.grps.xGroup.name !== grps.xGroup.name &&
-            lastSelectedLocation.grps.yGroup.name !== grps.yGroup.name) {
-            if (imgs.length > 0) {
-                let img = imgs[0];
-                sizeMultiplier = maxZoom;
-                draw();
-                let loc = locationToScrollTo(grps);
-                loc.left -= vw(50) - ((img.width / 2) * sizeMultiplier);
-                loc.top -= vh(50) - ((img.height / 2) * sizeMultiplier);
-                setCurrentScroll(loc.left, loc.top);
-                draw();
-            }
-        } else {
-            sizeMultiplier = lastSelectedLocation.sizeMultiplier;
-            draw();
-            setCurrentScroll(lastSelectedLocation.scroll.x, lastSelectedLocation.scroll.y);
-            draw();
-            lastSelectedLocation = null;
-        }
     }
-
-
-
-
-    /*
-             {
-
-     */
 }
-
 function locationToScrollTo(grps) {
     let left = 0;
     let top = 0;
@@ -473,7 +447,6 @@ function locationToScrollTo(grps) {
         top: top
     };
 }
-
 function getGroupsForLocation(x, y) {
     let axisItemPosX = 0;
     let axisItemPosY = 0;
@@ -513,7 +486,22 @@ function getImagesForLocation(grps) {
     return imgs;
 }
 
+// triggers
+function doubleClick(event) {
+
+
+    if(event.clientY < 100) {
+        reorder(0);
+    } else if(event.clientX < 100) {
+        reorder(1)
+    } else {
+        locationSelected(event.clientX, event.clientY);
+    }
+
+}
 function keyDown(event) {
+    startLocation();
+    console.log('key down');
     if(event.key === 'ArrowRight') {
         zoomIn();
     }
@@ -567,9 +555,13 @@ const mouseMoveHandler = function(e) {
     const dx = e.clientX - pos.x;
     const dy = e.clientY - pos.y;
 
+    moveMouse(dx, dy);
+};
+
+function moveMouse(dx, dy) {
     setCurrentScroll(pos.left - dx, pos.top - dy);
     draw();
-};
+}
 
 // helpers
 function setCurrentScroll(x, y) {
