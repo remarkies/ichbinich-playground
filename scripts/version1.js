@@ -25,6 +25,10 @@ let imageNameZoom = {
     min: 2,
     max: 10
 };
+let helpersZoom = {
+    min: 0,
+    max: 1.5
+};
 let axisSizeDivider = 1;
 let lastSelectedLocation = null;
 let pos = { top: 0, left: 0, x: 0, y: 0 };
@@ -80,6 +84,7 @@ function draw() {
     calcImages();
     handleImageData();
     handleImageAxises();
+    handleHelpers();
     resizeImages();
     updateAxises();
 }
@@ -387,6 +392,15 @@ function handleImageData() {
         } else {
             imageData.style.display = 'none';
         }
+    }
+}
+function handleHelpers() {
+    //console.log(sizeMultiplier);
+    let info = document.getElementById('helpers');
+    if(sizeMultiplier > helpersZoom.min && sizeMultiplier < helpersZoom.max) {
+        info.style.opacity = 1;
+    } else {
+        info.style.opacity = 0;
     }
 }
 function handleImageAxises() {

@@ -72,6 +72,30 @@ h1 {
     font-weight: bolder;
 }
 
+#helpers {
+    position: fixed;
+    top: 150px;
+    left: 150px;
+    color: #cccccc;
+    transition: opacity 1s;
+    z-index: -1;
+}
+
+
+.info-header {
+    font-size: 0.8em;
+    font-weight: bolder;
+    padding: 0px;
+    margin-bottom: 4px;
+}
+
+.info-text {
+    padding: 0;
+    margin: 4px;
+    font-size: 0.7em;
+    max-width: 200px;
+}
+
 
 #image-list {
     position: relative;
@@ -128,6 +152,7 @@ h1 {
     z-index: -.1;
     font-size: 1rem;
     color: lightgray;
+    transition: opacity 1s;
 }
 
 .imageAxis {
@@ -148,10 +173,12 @@ h1 {
 
 .imageXAxis p {
     margin-top: -30px;
+    white-space: nowrap;
 }
 
 .imageYAxis p {
     transform: rotate(-90deg);
     margin-left: -50px;
+    white-space: nowrap;
 }
 
