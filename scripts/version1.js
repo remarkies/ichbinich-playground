@@ -13,7 +13,8 @@ let verticalDistAround = vh(100);
 
 let sizeMultiplier = 0.5;
 let zoomSpeed = 1.07;
-let maxZoom = 8;
+let maxZoom = 20;
+let jumpZoom = 8;
 let minZoom = 0.5;
 let zoomCorrection = {
     x: 75,
@@ -477,7 +478,7 @@ function locationSelected(x, y) {
 
         if (imgs.length > 0) {
             let img = imgs[0];
-            sizeMultiplier = maxZoom;
+            sizeMultiplier = jumpZoom;
             draw();
             let loc = locationToScrollTo(grps);
             loc.left -= vw(50) - ((img.width / 2) * sizeMultiplier);
