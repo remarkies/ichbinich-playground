@@ -121,3 +121,37 @@ h1 {
     box-shadow: 2px 2px 2px 0px rgba(0,0,0,0.4);
     pointer-events: none;
 }
+
+.imageAxises {
+    position: relative;
+    background: transparent;
+    z-index: -.1;
+    font-size: 1rem;
+    color: lightgray;
+}
+
+.imageAxis {
+    position: absolute;
+    background: #e7e7e7;
+    color: lightgray;
+}
+
+.imageXAxis {
+    margin-top: -24px;
+    height: 1px;
+}
+.imageYAxis {
+    margin-top: 0px;
+    margin-left: -24px;
+    width: 1px;
+}
+
+.imageXAxis p {
+    margin-top: -30px;
+}
+
+.imageYAxis p {
+    transform: rotate(-90deg);
+    margin-left: -50px;
+}
+

@@ -79,6 +79,7 @@ async function init() {
 function draw() {
     calcImages();
     handleImageData();
+    handleImageAxises();
     resizeImages();
     updateAxises();
 }
@@ -93,6 +94,29 @@ function createHtmlImages(images) {
         div.setAttribute("id", img.id);
         div.style.left = img.posX + "px";
         div.style.top = img.posY + "px";
+
+        let divImageAxises = document.createElement("div");
+        divImageAxises.className = 'imagesAxises';
+        divImageAxises.setAttribute('id', 'axis' + img.name);
+        let divImageXAxis = document.createElement("div");
+        divImageXAxis.className = 'imageAxis imageXAxis';
+
+        let divImageXAxisText = document.createElement("p");
+        divImageXAxisText.className = 'imageAxisText imageXAxisText';
+        divImageXAxisText.textContent = img.width + ' cm';
+        divImageXAxis.append(divImageXAxisText);
+
+        let divImageYAxis = document.createElement("div");
+        divImageYAxis.className = 'imageAxis imageYAxis';
+
+        let divImageYAxisText = document.createElement("p");
+        divImageYAxisText.className = 'imageAxisText imageYAxisText';
+        divImageYAxisText.textContent = img.height + ' cm';
+        divImageYAxis.append(divImageYAxisText);
+
+        divImageAxises.append(divImageXAxis);
+        divImageAxises.append(divImageYAxis);
+        div.append(divImageAxises);
 
         let divImageData = document.createElement("div");
         divImageData.className = 'imageData';
@@ -362,6 +386,36 @@ function handleImageData() {
             imageData.style.marginLeft = ((images.filter(o => o.name === imageData.id)[0].width * sizeMultiplier) + 24) + 'px';
         } else {
             imageData.style.display = 'none';
+        }
+    }
+}
+function handleImageAxises() {
+    //console.log(sizeMultiplier);
+    let imageAxises = document.getElementsByClassName('imagesAxises');
+    for(let i = 0; i < imageAxises.length; i++) {
+        let imageAxis = imageAxises[i];
+
+        if(sizeMultiplier > imageNameZoom.min && sizeMultiplier < imageNameZoom.max) {
+            let img = images.filter(o => "axis" + o.name === imageAxis.id)[0];
+
+            imageAxis.style.display = 'block';
+            imageAxis.childNodes.forEach(childNode => {
+                if (childNode.className.includes('imageXAxis')) {
+                    childNode.style.width = (img.width * sizeMultiplier) + 'px';
+
+                    childNode.childNodes.forEach(text => {
+                        text.style.marginLeft = ((img.width / 2 - 3) * sizeMultiplier) + 'px';
+                    });
+                } else if (childNode.className.includes('imageYAxis')) {
+                    childNode.style.height = (img.height * sizeMultiplier) + 'px';
+
+                    childNode.childNodes.forEach(text => {
+                        text.style.marginTop = ((img.height / 2 - 3) * sizeMultiplier) + 'px';
+                    });
+                }
+            });
+        } else {
+            imageAxis.style.display = 'none';
         }
     }
 }
