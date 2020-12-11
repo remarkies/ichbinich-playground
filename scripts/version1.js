@@ -27,7 +27,7 @@ let imageNameZoom = {
 };
 let helpersZoom = {
     min: 0,
-    max: 1.5
+    max: 1
 };
 let axisSizeDivider = 1;
 let lastSelectedLocation = null;
