@@ -17,7 +17,7 @@ let maxZoom = 20;
 let jumpZoom = 8;
 let minZoom = 0.5;
 let zoomCorrection = {
-    x: 75,
+    x: 60,
     y: 40
 }
 let paddingBetweenGroups = 5;
@@ -49,7 +49,13 @@ let axises = [
             return compareColors(colorA, colorB);
         }
     }
+    /*
 
+
+    { name: 'size', direction: 'y', sort: 'up', groups: [],
+        getValueToCompare(img) { return calcVolumeOfImage(img); } ,
+        compare(a,b) { return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0) }
+    }
     /*
     { name: 'size', direction: 'y', sort: 'up', groups: [],
         getValueToCompare(img) { return calcVolumeOfImage(img); } ,
